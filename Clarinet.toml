@@ -8,6 +8,10 @@ requirements = []
 path = "contracts/contract-factory.clar"
 depends_on = []
 
+[contracts.security-validator]
+path = "contracts/security-validator.clar"
+depends_on = []
+
 [repl]
 costs_version = 2
 parser_version = 2
