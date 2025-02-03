@@ -3,13 +3,15 @@
 
 ;; Constants 
 (define-constant err-validation-failed (err u200))
+(define-constant err-invalid-contract-id (err u201))
 
 ;; Data vars
 (define-map validations
   { contract-id: uint }
   {
     status: (string-ascii 20),
-    issues: (list 10 (string-ascii 64))
+    issues: (list 10 (string-ascii 64)),
+    last-validated: uint
   }
 )
 
@@ -19,11 +21,13 @@
     (
       (validation-result (run-validations contract-id))
     )
+    (asserts! (is-valid-contract-id contract-id) err-invalid-contract-id)
     (map-set validations
       { contract-id: contract-id }
       {
         status: (if validation-result "PASSED" "FAILED"),
-        issues: (get-validation-issues contract-id)
+        issues: (get-validation-issues contract-id),
+        last-validated: block-height
       }
     )
     (if validation-result
@@ -45,4 +49,8 @@
 
 (define-read-only (get-validation-issues (contract-id uint))
   (list)
+)
+
+(define-read-only (is-valid-contract-id (contract-id uint))
+  (is-some (contract-call? .contract-factory get-contract contract-id))
 )
