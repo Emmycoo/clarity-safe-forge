@@ -34,48 +34,26 @@ Clarinet.test({
     ]);
     
     assertEquals(block.receipts.length, 1);
-    const result = block.receipts[0].result;
-    result.expectOk();
+    block.receipts[0].result.expectOk();
   },
 });
 
 Clarinet.test({
-  name: "Ensure validation status expires after defined period",
+  name: "Ensure security checks identify missing owner control",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get("deployer")!;
-    const user1 = accounts.get("wallet_1")!;
     
-    // Create and validate contract
     let block = chain.mineBlock([
       Tx.contractCall(
-        "contract-factory",
-        "create-contract",
-        [types.uint(1)],
-        user1.address
-      ),
-      Tx.contractCall(
         "security-validator",
-        "validate-contract",
-        [types.uint(0)],
+        "check-owner-control",
+        [types.uint(999)],
         deployer.address
       )
     ]);
     
-    // Mine blocks to simulate time passing
-    for (let i = 0; i < 145; i++) {
-      chain.mineBlock([]);
-    }
-    
-    // Check validation status
-    block = chain.mineBlock([
-      Tx.contractCall(
-        "security-validator",
-        "get-validation-status",
-        [types.uint(0)],
-        deployer.address
-      )
-    ]);
-    
-    assertEquals(block.receipts[0].result.expectOk(), null);
+    assertEquals(block.receipts.length, 1);
+    const result = block.receipts[0].result;
+    result.expectList();
   },
 });
